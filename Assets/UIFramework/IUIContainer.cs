@@ -1,11 +1,15 @@
-﻿namespace UIFramework
+﻿using UnityEngine;
+
+namespace UIFramework
 {
     public interface IUIContainer
     {
-        public void Open();
+        [HideInInspector] public AbstractUIManager PanelManager { get; set; }
 
-        public void Close();
+        void Open();
 
-        public void Init();
+        void Close();
+
+        void Init();
     }
 }

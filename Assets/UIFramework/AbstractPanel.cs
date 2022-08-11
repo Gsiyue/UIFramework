@@ -1,11 +1,16 @@
 ﻿using UnityEngine;
-using UnityEngine.Events;
 
 namespace UIFramework
 {
-    public abstract class UIBoxBase<T> : MonoBehaviour, IUIContainer where T : UIPanelManagerBase<T>
-    {   
-        [HideInInspector] public T PanelManager { get; set; }
+    /// <summary>
+    /// Panel UI容器
+    /// 同时只可存在一个Panel，当打开另一个Panel时将关闭当前Panel
+    /// </summary>
+    public abstract class AbstractPanel : MonoBehaviour, IUIContainer
+    {
+        [HideInInspector] public AbstractPanel PanelBefore;
+
+        [HideInInspector] public AbstractUIManager PanelManager { get; set; }
 
         /// <summary>
         /// 打开时调用
@@ -24,11 +29,13 @@ namespace UIFramework
 
         void IUIContainer.Open()
         {
+            gameObject.SetActive(true);
             OnOpen();
         }
 
         void IUIContainer.Close()
         {
+            gameObject.SetActive(false);
             OnClose();
         }
 

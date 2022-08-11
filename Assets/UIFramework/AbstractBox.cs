@@ -2,11 +2,13 @@
 
 namespace UIFramework
 {
-    public abstract class UIPanelBase<T> : MonoBehaviour, IUIContainer where T : UIPanelManagerBase<T>
-    {
-        [HideInInspector] public UIPanelBase<T> PanelBefore;
-
-        [HideInInspector] public T PanelManager { get; set; }
+    /// <summary>
+    /// Box UI容器
+    /// 用于小窗口，可以随时打开和关闭，当打开新Panel时关闭所有Box
+    /// </summary>
+    public abstract class AbstractBox : MonoBehaviour, IUIContainer
+    {   
+        [HideInInspector] public AbstractUIManager PanelManager { get; set; }
 
         /// <summary>
         /// 打开时调用
@@ -25,13 +27,11 @@ namespace UIFramework
 
         void IUIContainer.Open()
         {
-            gameObject.SetActive(true);
             OnOpen();
         }
 
         void IUIContainer.Close()
         {
-            gameObject.SetActive(false);
             OnClose();
         }
 

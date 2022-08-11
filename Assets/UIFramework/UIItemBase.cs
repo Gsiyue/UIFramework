@@ -2,20 +2,21 @@
 
 namespace UIFramework
 {
-    public abstract class UIItemBase<T> : MonoBehaviour where T : IUIContainer
+    /// <summary>
+    /// Item 一般用于列表中
+    /// </summary>
+    public abstract class AbstractItem : MonoBehaviour
     {
-        [HideInInspector] public T Parent;
+        [HideInInspector] public IUIContainer Parent { get; private set; }
+
+        public void Init(IUIContainer container)
+        {
+            Parent = container;
+        }
 
         /// <summary>
         /// 初始化
         /// </summary>
-        public virtual void Init()
-        {
-            Parent = transform.GetComponentInParent<T>();
-            if (Parent == null)
-            {
-                Debug.LogError(GetType() + " 非 "+ typeof(T) + "  的子物体");
-            }
-        }
+        protected virtual void OnInit() { }
     }
 }

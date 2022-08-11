@@ -1,53 +1,67 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace UIFramework
 {
-    public abstract class UIPanelManagerBase<T> : MonoBehaviour where T : UIPanelManagerBase<T>
+    /// <summary>
+    /// UI 管理基类
+    /// 用于初始化、打开、关闭所管理的UI容器
+    /// </summary>
+    public abstract class AbstractUIManager : MonoBehaviour
     {
-        public UIPanelBase<T>[] Panels;
-        [HideInInspector] public UIPanelBase<T> CurrentPanel;
+        public AbstractPanel[] Panels;
+        [HideInInspector] public AbstractPanel CurrentPanel;
 
-        public UIBoxBase<T>[] Boxs;
-        [HideInInspector] public List<UIBoxBase<T>> CurrentBoxs;
+        public AbstractBox[] Boxs;
+        [HideInInspector] public List<AbstractBox> CurrentBoxs;
 
         private void Start()
         {
-            CurrentBoxs = new List<UIBoxBase<T>>();
-            if (Panels != null && Panels.Length > 0)
-            {
-                foreach (var panel in Panels)
-                {
-                    panel.PanelManager = (T)this;
-                    (panel as IUIContainer).Init();
-                }
-                OpenPanel(Panels[0]);
-            }
+            CurrentBoxs = new List<AbstractBox>();
             if (Boxs != null && Boxs.Length > 0)
             {
                 foreach (var box in Boxs)
                 {
-                    box.PanelManager = (T)this;
+                    box.PanelManager = this;
                     box.gameObject.SetActive(false);
                     (box as IUIContainer).Init();
                 }
             }
+            if (Panels != null && Panels.Length > 0)
+            {
+                foreach (var panel in Panels)
+                {
+                    panel.PanelManager = this;
+                    (panel as IUIContainer).Init();
+                }
+                OpenPanel(Panels[0]);
+            }
         }
 
         #region Panel
-        public void OpenPanel(UIPanelBase<T> panel)
+        private void PanelOpen(AbstractPanel panel)
         {
-            if (panel == null)
-            {
-                return;
-            }
             panel.PanelBefore = CurrentPanel;
             CurrentPanel = panel;
             CloseAllPanels();
             CloseAllBox();
             (panel as IUIContainer).Open();
+        }
+
+        public void OpenPanel(AbstractPanel panel)
+        {
+            if (panel == null)
+            {
+                return;
+            }
+            foreach (var pan in Panels)
+            {
+                if (pan == panel)
+                {
+                    PanelOpen(pan);
+                    return;
+                }
+            }
         }
 
         public void OpenPanel(string panelName)
@@ -56,17 +70,27 @@ namespace UIFramework
             {
                 return;
             }
-            UIPanelBase<T> panel = null;
-            for (int i = 0; i < Panels.Length; i++)
+
+            foreach (var panel in Panels)
             {
-                if (Panels[i].name == panelName)
+                if (panel.name == panelName)
                 {
-                    panel = Panels[i];
-                    break;
+                    PanelOpen(panel);
+                    return;
                 }
             }
+        }
 
-            OpenPanel(panel);
+        public void OpenPanel<C>() where C : IUIContainer
+        {
+            foreach (var panel in Panels)
+            {
+                if (panel.GetType() == typeof(C))
+                {
+                    PanelOpen(panel);
+                    return;
+                }
+            }
         }
 
         private void CloseAllPanels()
@@ -84,7 +108,7 @@ namespace UIFramework
             }
         }
 
-        public P GetPanel<P>() where P : UIPanelBase<T>
+        public P GetPanel<P>() where P : AbstractPanel
         {
             foreach (var panel in Panels)
             {
@@ -98,7 +122,7 @@ namespace UIFramework
         #endregion
 
         #region Box
-        public void OpenBox(UIBoxBase<T> box)
+        public void OpenBox(AbstractBox box)
         {
             if (box == null)
             {
@@ -123,12 +147,24 @@ namespace UIFramework
                 if (box.name == boxName)
                 {
                     OpenBox(box);
-                    break;
+                    return;
                 }
             }
         }
 
-        public void CloseBox(UIBoxBase<T> box)
+        public void OpenBox<C>()where C : IUIContainer
+        {
+            foreach (var box in Boxs)
+            {
+                if (box.GetType() == typeof(C))
+                {
+                    OpenBox(box);
+                    return;
+                }
+            }
+        }
+
+        public void CloseBox(AbstractBox box)
         {
             if (box == null)
             {
@@ -153,7 +189,19 @@ namespace UIFramework
                 if (box.name == boxName)
                 {
                     CloseBox(box);
-                    break;
+                    return;
+                }
+            }
+        }
+
+        public void CloseBox<C>() where C : IUIContainer
+        {
+            foreach (var box in Boxs)
+            {
+                if (box.GetType() == typeof(C))
+                {
+                    CloseBox(box);
+                    return;
                 }
             }
         }
@@ -168,7 +216,7 @@ namespace UIFramework
             CurrentBoxs.Clear();
         }
 
-        public B GetBox<B>() where B : UIBoxBase<T>
+        public B GetBox<B>() where B : AbstractBox
         {
             foreach (var box in Boxs)
             {
