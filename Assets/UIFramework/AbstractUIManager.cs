@@ -9,34 +9,40 @@ namespace UIFramework
     /// </summary>
     public abstract class AbstractUIManager : MonoBehaviour
     {
-        public AbstractPanel[] Panels;
+        private AbstractPanel[] Panels;
         [HideInInspector] public AbstractPanel CurrentPanel;
 
-        public AbstractBox[] Boxs;
+        private AbstractBox[] Boxs;
         [HideInInspector] public List<AbstractBox> CurrentBoxs;
 
         private void Start()
         {
             CurrentBoxs = new List<AbstractBox>();
+
+            Panels = gameObject.GetComponentsInChildren<AbstractPanel>(true);
+            Boxs = gameObject.GetComponentsInChildren<AbstractBox>(true);
+
             if (Boxs != null && Boxs.Length > 0)
             {
                 foreach (var box in Boxs)
                 {
-                    box.PanelManager = this;
                     box.gameObject.SetActive(false);
-                    (box as IUIContainer).Init();
+                    (box as IUIContainer).Init(this);
                 }
             }
             if (Panels != null && Panels.Length > 0)
             {
                 foreach (var panel in Panels)
                 {
-                    panel.PanelManager = this;
-                    (panel as IUIContainer).Init();
+                    (panel as IUIContainer).Init(this);
                 }
                 OpenPanel(Panels[0]);
             }
+
+            OnInit();
         }
+
+        protected virtual void OnInit() { }
 
         #region Panel
         private void PanelOpen(AbstractPanel panel)
@@ -103,7 +109,7 @@ namespace UIFramework
             {
                 if (panel.isActiveAndEnabled)
                 {
-                    (panel as IUIContainer).Close();
+                    (panel as IUIContainer).Close(true);
                 }
             }
         }
@@ -131,7 +137,6 @@ namespace UIFramework
             if (!CurrentBoxs.Contains(box))
             {
                 CurrentBoxs.Add(box);
-                box.gameObject.SetActive(true);
                 (box as IUIContainer).Open();
             }
         }
@@ -144,7 +149,7 @@ namespace UIFramework
             }
             foreach (var box in Boxs)
             {
-                if (box.name == boxName)
+                if (string.Equals(box.name, boxName))
                 {
                     OpenBox(box);
                     return;
@@ -152,7 +157,7 @@ namespace UIFramework
             }
         }
 
-        public void OpenBox<C>()where C : IUIContainer
+        public void OpenBox<C>() where C : IUIContainer
         {
             foreach (var box in Boxs)
             {
@@ -173,7 +178,6 @@ namespace UIFramework
             if (CurrentBoxs.Contains(box))
             {
                 CurrentBoxs.Remove(box);
-                box.gameObject.SetActive(false);
                 (box as IUIContainer).Close();
             }
         }
@@ -184,7 +188,7 @@ namespace UIFramework
             {
                 return;
             }
-            foreach (var box in Boxs)
+            foreach (var box in CurrentBoxs)
             {
                 if (box.name == boxName)
                 {
@@ -196,7 +200,7 @@ namespace UIFramework
 
         public void CloseBox<C>() where C : IUIContainer
         {
-            foreach (var box in Boxs)
+            foreach (var box in CurrentBoxs)
             {
                 if (box.GetType() == typeof(C))
                 {
@@ -210,8 +214,7 @@ namespace UIFramework
         {
             foreach (var box in CurrentBoxs)
             {
-                box.gameObject.SetActive(false);
-                (box as IUIContainer).Close();
+                (box as IUIContainer).Close(true);
             }
             CurrentBoxs.Clear();
         }
@@ -228,5 +231,6 @@ namespace UIFramework
             return null;
         }
         #endregion
+
     }
 }

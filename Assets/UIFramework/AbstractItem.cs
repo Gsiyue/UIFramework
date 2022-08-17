@@ -12,6 +12,7 @@ namespace UIFramework
         public void Init(IUIContainer container)
         {
             Parent = container;
+            OnInit();
         }
 
         /// <summary>
